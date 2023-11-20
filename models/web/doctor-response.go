@@ -35,20 +35,14 @@ type DoctorAllResponse struct {
 }
 
 type AvailableDoctorResponse struct {
-	ID       int    `json:"id"`
-	Fullname string `json:"fullname"`
-	Email    string `json:"email"`
-	Price    int    `json:"price"`
-	Tag      string `json:"tag"`
-	ImageURL string `json:"image_url"`
-}
-
-type SpecializeDoctorResponse struct {
-	ID       uint   `json:"id"`
-	Fullname string `json:"fullname"`
-	Email    string `json:"email"`
-	Status   string `json:"status"`
-	Price    int    `json:"price"`
-	Tag      string `json:"tag"`
-	ImageURL string `json:"image_url"`
+	ID             uint   `json:"id"`
+	ProfilePicture string `json:"profile_picture"`
+	Fullname       string `json:"fullname"`
+	Gender         string `json:"gender"`
+	Status         bool   `json:"status"`
+	Price          int    `json:"price"`
+	Specialist     string `json:"specialist"`
+	Experience     string `json:"experience"`
+	NoSTR          int    `json:"no_str"`
+	Alumnus        string `json:"alumnus"`
 }
