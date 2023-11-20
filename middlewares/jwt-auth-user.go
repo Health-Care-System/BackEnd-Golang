@@ -57,7 +57,7 @@ func UserIDRoleAuth(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 		} else {
 			return c.JSON(http.StatusUnauthorized, helper.ErrorResponse("Invalid or Expired Token"))
-			
+
 		}
 	}
 }
