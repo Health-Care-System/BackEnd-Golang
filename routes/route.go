@@ -20,7 +20,7 @@ func SetupRoutes(e *echo.Echo) {
 	gAdmins.PUT("/update/doctor/:id", controllers.UpdateDoctorByAdminController, AdminJWT)
 	gAdmins.PUT("/update/payment/:id", controllers.UpdatePaymentStatusByAdminController, AdminJWT)
 	gAdmins.DELETE("/delete/doctor/:id", controllers.DeleteDoctorByAdminController, AdminJWT)
-	gAdmins.PUT("/:id", controllers.UpdateAdminController, AdminJWT)
+	gAdmins.PUT("/profile", controllers.UpdateAdminController, AdminJWT)
 	gAdmins.POST("/medicines", controllers.CreateMedicineController, AdminJWT)
 	gAdmins.GET("/medicines", controllers.GetMedicineAdminController)
 	gAdmins.GET("/medicines/:id", controllers.GetMedicineAdminByIDController)

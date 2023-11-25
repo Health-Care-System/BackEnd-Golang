@@ -19,8 +19,10 @@ func AdminRoleAuth(next echo.HandlerFunc) echo.HandlerFunc {
 		if token.Valid {
 			userClaims := token.Claims.(jwt.MapClaims)
 			userRole := userClaims["role"].(string)
+			userID := int(userClaims["id"].(float64))
 
 			if userRole == "admin" {
+				c.Set("userID", userID)
 				return next(c)
 			} else {
 				return c.JSON(http.StatusForbidden, helper.ErrorResponse("You are not Authorized to Access this Resource"))

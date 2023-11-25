@@ -47,10 +47,7 @@ func LoginAdminController(c echo.Context) error {
 
 // Update Admin
 func UpdateAdminController(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("Invalid Admin ID"))
-	}
+	userID := c.Get("userID")
 
 	var updatedAdmin web.AdminUpdateRequest
 
@@ -59,7 +56,7 @@ func UpdateAdminController(c echo.Context) error {
 	}
 
 	var existingAdmin schema.Admin
-	result := configs.DB.First(&existingAdmin, id)
+	result := configs.DB.First(&existingAdmin, userID)
 	if result.Error != nil {
 		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("Failed to Retrieve Admin"))
 	}
