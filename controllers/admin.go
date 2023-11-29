@@ -6,6 +6,7 @@ import (
 	"healthcare/models/schema"
 	"healthcare/models/web"
 	"healthcare/utils/helper"
+	"healthcare/utils/helper/constanta"
 	"healthcare/utils/response"
 	"strconv"
 
@@ -76,6 +77,12 @@ func UpdatePaymentStatusByAdminController(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("invalid transaction id"))
 	}
 
+	var existingData schema.DoctorTransaction
+	results := configs.DB.First(&existingData, id)
+	if results.Error != nil {
+		return c.JSON(http.StatusNotFound, helper.ErrorResponse(constanta.ErrNotFound))
+	}
+
 	// Retrieve the existing transaction from the database
 	var existingTransaction schema.DoctorTransaction
 	result := configs.DB.First(&existingTransaction, id)
@@ -83,13 +90,9 @@ func UpdatePaymentStatusByAdminController(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("failed to retrieve transaction"))
 	}
 
-	// Bind the updated payment status from the request body
-	var updateRequest struct {
-		PaymentStatus string `json:"payment_status" validate:"required,oneof=pending success cancelled"`
-	}
-
+	var updateRequest web.UpdatePaymentRequest
 	if err := c.Bind(&updateRequest); err != nil {
-		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("invalid input update data"))
+		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(constanta.ErrInvalidBody))
 	}
 
 	// Validate the updated payment status
@@ -97,5 +100,10 @@ func UpdatePaymentStatusByAdminController(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
 	}
 
-	return c.JSON(http.StatusOK, helper.SuccessResponse("payment status updated successfully", nil))
+	result = configs.DB.Model(&existingTransaction).Updates(updateRequest)
+	if result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse(constanta.ErrActionUpdated+"payment status"))
+	}
+
+	return c.JSON(http.StatusOK, helper.SuccessResponse(constanta.SuccessActionUpdated+"payment status", nil))
 }
