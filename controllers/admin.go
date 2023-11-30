@@ -6,8 +6,8 @@ import (
 	"healthcare/models/schema"
 	"healthcare/models/web"
 	"healthcare/utils/helper"
-	"healthcare/utils/helper/constanta"
 	"healthcare/utils/response"
+	"log"
 	"strconv"
 
 	"net/http"
@@ -76,10 +76,12 @@ func AdminUpdatePaymentStatusController(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("invalid admin id"))
 	}
 
-	// Extracting transaction ID from the path parameter
+	// Log the admin ID for debugging purposes
+	log.Printf("Admin ID: %d", adminID)
+
 	transactionID, err := strconv.Atoi(c.Param("transaction_id"))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("invalid transaction id"))
+		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("invalid transaction ID"))
 	}
 
 	var requestBody web.UpdatePaymentsRequest
@@ -87,17 +89,22 @@ func AdminUpdatePaymentStatusController(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("invalid request body"))
 	}
 
+	if err := helper.ValidateStruct(requestBody); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
+	}
+	
 	// Checking if the required fields have been provided
 	if requestBody.PaymentStatus == "" {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("payment status is required"))
 	}
 
 	var doctorTransaction schema.DoctorTransaction
-	err = configs.DB.First(&doctorTransaction, "id = ?", adminID,transactionID).Error
+	err = configs.DB.First(&doctorTransaction, "id = ?", transactionID).Error
 	if err != nil {
 		return c.JSON(http.StatusNotFound, helper.ErrorResponse("doctor transaction not found"))
 	}
-	
+
+	// Updating payment status if provided
 	doctorTransaction.PaymentStatus = requestBody.PaymentStatus
 
 	// Saving the updated doctor transaction to the database
@@ -163,7 +170,7 @@ func AdminUpdatePaymentStatusController(c echo.Context) error {
 // 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(constanta.ErrInvalidBody))
 // >>>>>>> development
 // 	}
-	
+
 // 	doctorTransaction.PaymentStatus = requestBody.PaymentStatus
 
 // 	// Saving the updated doctor transaction to the database
@@ -190,8 +197,6 @@ func AdminUpdatePaymentStatusController(c echo.Context) error {
 // 	return c.JSON(http.StatusOK, helper.SuccessResponse(constanta.SuccessActionUpdated+"payment status", nil))
 // >>>>>>> development
 // }
-
-
 
 // UpdatePaymentStatusByAdminController updates payment status by admin
 // func UpdatePaymentStatusByAdminController(c echo.Context) error {
