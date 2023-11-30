@@ -19,3 +19,9 @@ func ConvertToAdminUpdateRequest(admin web.AdminUpdateRequest) *schema.Admin {
 		Password: admin.Password,
 	}
 }
+
+func ConvertToPaymentsRequest(admin web.UpdatePaymentsRequest) *schema.DoctorTransaction {
+	return &schema.DoctorTransaction{
+		PaymentStatus: admin.PaymentStatus,
+	}
+}
