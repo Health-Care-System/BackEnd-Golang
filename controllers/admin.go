@@ -6,7 +6,6 @@ import (
 	"healthcare/models/schema"
 	"healthcare/models/web"
 	"healthcare/utils/helper"
-	"healthcare/utils/helper/constanta"
 	"healthcare/utils/response"
 	"log"
 	"strconv"
@@ -90,6 +89,10 @@ func AdminUpdatePaymentStatusController(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("invalid request body"))
 	}
 
+	if err := helper.ValidateStruct(requestBody); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
+	}
+	
 	// Checking if the required fields have been provided
 	if requestBody.PaymentStatus == "" {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("payment status is required"))
@@ -167,7 +170,7 @@ func AdminUpdatePaymentStatusController(c echo.Context) error {
 // 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(constanta.ErrInvalidBody))
 // >>>>>>> development
 // 	}
-	
+
 // 	doctorTransaction.PaymentStatus = requestBody.PaymentStatus
 
 // 	// Saving the updated doctor transaction to the database
@@ -194,8 +197,6 @@ func AdminUpdatePaymentStatusController(c echo.Context) error {
 // 	return c.JSON(http.StatusOK, helper.SuccessResponse(constanta.SuccessActionUpdated+"payment status", nil))
 // >>>>>>> development
 // }
-
-
 
 // UpdatePaymentStatusByAdminController updates payment status by admin
 // func UpdatePaymentStatusByAdminController(c echo.Context) error {
