@@ -17,3 +17,10 @@ func ConvertToAdminUpdateResponse(admin *schema.Admin) web.AdminUpdateResponse {
 		Email: admin.Email,
 	}
 }
+
+func ConvertToPaymentsResponse(admins *schema.DoctorTransaction) web.UpdatePaymentsResponse {
+	return web.UpdatePaymentsResponse{
+		TransactionID: admins.ID,
+		PaymentStatus: admins.PaymentStatus,
+	}
+}

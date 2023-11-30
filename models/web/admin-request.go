@@ -10,3 +10,7 @@ type AdminUpdateRequest struct {
 	Email    string `json:"email" form:"email" validate:"omitempty,email"`
 	Password string `json:"password" form:"password" validate:"omitempty,min=10,max=15"`
 }
+
+type UpdatePaymentsRequest struct {
+	PaymentStatus string `json:"payment_status" form:"payment_status" validate:"required"`
+}
