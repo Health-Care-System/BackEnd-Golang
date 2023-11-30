@@ -17,3 +17,10 @@ func ConvertToAdminUpdateResponse(admin *schema.Admin) web.AdminUpdateResponse {
 		Email: admin.Email,
 	}
 }
+
+func ConvertToGetProfileAdminResponse(admin *schema.Admin) web.AdminProfileResponse {
+	return web.AdminProfileResponse{
+		Name:  admin.Name,
+		Email: admin.Email,
+	}
+}

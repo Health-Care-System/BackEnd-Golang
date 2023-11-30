@@ -107,3 +107,20 @@ func UpdatePaymentStatusByAdminController(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, helper.SuccessResponse(constanta.SuccessActionUpdated+"payment status", nil))
 }
+
+func GetAdminProfileController(c echo.Context) error {
+	userID, ok := c.Get("userID").(int)
+	if !ok {
+		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse(constanta.ErrInvalidIDParam))
+	}
+
+	var admin schema.Admin
+	if err := configs.DB.First(&admin, userID).Error; err != nil {
+		return c.JSON(http.StatusNotFound, helper.ErrorResponse(constanta.ErrNotFound))
+
+	}
+
+	response := response.ConvertToGetProfileAdminResponse(&admin)
+
+	return c.JSON(http.StatusOK, helper.SuccessResponse(constanta.SuccessActionGet+"admin profile", response))
+}
