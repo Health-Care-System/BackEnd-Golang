@@ -11,6 +11,12 @@ type AdminUpdateRequest struct {
 	Password string `json:"password" form:"password" validate:"omitempty,min=10,max=15"`
 }
 
+
 type UpdatePaymentsRequest struct {
 	PaymentStatus string `json:"payment_status" form:"payment_status" validate:"required"`
 }
+
+// type UpdatePaymentRequest struct {
+// 	PaymentStatus string `json:"payment_status" validate:"required,oneof=pending success cancelled"`
+// >>>>>>> development
+// }
