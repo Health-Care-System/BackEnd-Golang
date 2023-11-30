@@ -70,58 +70,64 @@ func UpdateAdminController(c echo.Context) error {
 }
 
 func AdminUpdatePaymentStatusController(c echo.Context) error {
-	// Getting the admin ID from the context
-	adminID, ok := c.Get("userID").(int)
-	if !ok {
-		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("invalid admin id"))
-	}
+    // Getting the admin ID from the context
+    adminID, ok := c.Get("userID").(int)
+    if !ok {
+        return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("invalid admin id"))
+    }
 
-	// Log the admin ID for debugging purposes
-	log.Printf("Admin ID: %d", adminID)
+    // Log the admin ID for debugging purposes
+    log.Printf("Admin ID: %d", adminID)
 
-	transactionID, err := strconv.Atoi(c.Param("transaction_id"))
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("invalid transaction ID"))
-	}
+    // Log the transaction ID from the URL
+    log.Printf("Transaction ID from URL: %s", c.Param("id"))
 
-	var requestBody web.UpdatePaymentsRequest
-	if err := c.Bind(&requestBody); err != nil {
-		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("invalid request body"))
-	}
+    transactionID, err := strconv.Atoi(c.Param("id"))
+    if err != nil {
+        log.Printf("Error converting transaction ID: %v", err)
+        return c.JSON(http.StatusBadRequest, helper.ErrorResponse("invalid transaction ID"))
+    }
 
-	if err := helper.ValidateStruct(requestBody); err != nil {
-		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
-	}
-	
-	// Checking if the required fields have been provided
-	if requestBody.PaymentStatus == "" {
-		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("payment status is required"))
-	}
+    var requestBody web.UpdatePaymentsRequest
+    if err := c.Bind(&requestBody); err != nil {
+        return c.JSON(http.StatusBadRequest, helper.ErrorResponse("invalid request body"))
+    }
 
-	var doctorTransaction schema.DoctorTransaction
-	err = configs.DB.First(&doctorTransaction, "id = ?", transactionID).Error
-	if err != nil {
-		return c.JSON(http.StatusNotFound, helper.ErrorResponse("doctor transaction not found"))
-	}
+    if err := helper.ValidateStruct(requestBody); err != nil {
+        return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
+    }
 
-	// Updating payment status if provided
-	doctorTransaction.PaymentStatus = requestBody.PaymentStatus
+    // Checking if the required fields have been provided
+    if requestBody.PaymentStatus == "" {
+        return c.JSON(http.StatusBadRequest, helper.ErrorResponse("payment status is required"))
+    }
 
-	// Saving the updated doctor transaction to the database
-	if err := configs.DB.Save(&doctorTransaction).Error; err != nil {
-		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("failed to update payment status"))
-	}
+    var doctorTransaction schema.DoctorTransaction
+    err = configs.DB.First(&doctorTransaction, "id = ?", transactionID).Error
+    if err != nil {
+        return c.JSON(http.StatusNotFound, helper.ErrorResponse("doctor transaction not found"))
+    }
 
-	// Getting user data
-	var user schema.User
-	err = configs.DB.First(&user, "id=?", doctorTransaction.UserID).Error
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("failed to retrieve user data"))
-	}
+    // Updating payment status if provided
+    doctorTransaction.PaymentStatus = requestBody.PaymentStatus
 
-	response := response.ConvertToPaymentsResponse(&doctorTransaction)
-	return c.JSON(http.StatusOK, helper.SuccessResponse("payment status successfully updated", response))
+    // Saving the updated doctor transaction to the database
+    if err := configs.DB.Save(&doctorTransaction).Error; err != nil {
+        return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("failed to update payment status"))
+    }
+
+    // Getting user data
+    var user schema.User
+    err = configs.DB.First(&user, "id=?", doctorTransaction.UserID).Error
+    if err != nil {
+        return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("failed to retrieve user data"))
+    }
+
+    response := response.ConvertToPaymentsResponse(&doctorTransaction)
+    return c.JSON(http.StatusOK, helper.SuccessResponse("payment status successfully updated", response))
 }
+
+
 
 // func AdminUpdatePaymentStatusController(c echo.Context) error {
 // 	// Getting the admin ID from the context
