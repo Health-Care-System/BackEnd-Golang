@@ -97,31 +97,35 @@ func UpdateArticleById(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
 	}
 
-	file, fileHeader, err := c.Request().FormFile("image")
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(constanta.ErrImageFileRequired))
-	}
-	defer file.Close()
+	if file, fileHeader, err := c.Request().FormFile("image"); err == nil {
+		defer file.Close()
 
-	allowedExtensions := []string{".jpg", ".jpeg", ".png"}
-	ext := filepath.Ext(fileHeader.Filename)
-	allowed := false
-	for _, validExt := range allowedExtensions {
-		if ext == validExt {
-			allowed = true
-			break
+		allowedExtensions := []string{".jpg", ".jpeg", ".png"}
+		ext := filepath.Ext(fileHeader.Filename)
+		allowed := false
+		for _, validExt := range allowedExtensions {
+			if ext == validExt {
+				allowed = true
+				break
+			}
 		}
-	}
-	if !allowed {
-		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(constanta.ErrInvalidImageFormat))
-	}
+		if !allowed {
+			return c.JSON(http.StatusBadRequest, helper.ErrorResponse(constanta.ErrInvalidImageFormat))
+		}
 
-	image, err := helper.UploadFilesToGCS(c, fileHeader)
-	if err != nil {
-		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("error upload image to Cloud Storage"))
-	}
+		image, err := helper.UploadFilesToGCS(c, fileHeader)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("error upload image to Cloud Storage"))
+		}
 
-	updateArticle.Image = image
+		updateArticle.Image = image
+
+	} else if err != http.ErrMissingFile {
+		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(constanta.ErrImageFileRequired))
+
+	} else {
+		updateArticle.Image = existingArticle.Image
+	}
 
 	result = configs.DB.Model(&existingArticle).Updates(updateArticle)
 	if result.Error != nil {
