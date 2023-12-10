@@ -13,5 +13,10 @@ type Message struct {
 	CreatedAt  time.Time
 }
 
+type Messages struct {
+	ID           uint `gorm:"primaryKey"`
+	RoomID       string
+	Message      string
+}
 
 
