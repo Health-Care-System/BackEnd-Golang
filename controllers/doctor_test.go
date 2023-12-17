@@ -1158,3 +1158,4 @@ func TestUpdateManageUserControllerValid(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
+
