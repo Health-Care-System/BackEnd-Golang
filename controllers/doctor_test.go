@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"healthcare/models/web"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -1128,6 +1129,32 @@ func TestChangeDoctorStatusControllerValid(t *testing.T) {
 	c.Set("userID", doctorID)
 
 	err := ChangeDoctorStatusController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestUpdateManageUserControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+
+	updatedData := web.UpdateManageUserRequest{
+		HealthDetails: "Demam",
+		PatientStatus: "success",
+	}
+	req := httptest.NewRequest(http.MethodPut, "/doctors/manage-user", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	c := e.NewContext(req, echo.NewResponse(httptest.NewRecorder(), e))
+	doctorToken := os.Getenv("DOCTOR_TOKEN")
+	req.Header.Set("Authorization", doctorToken)
+	userID := 4
+	body, err := json.Marshal(updatedData)
+	req.Body = ioutil.NopCloser(bytes.NewReader(body))
+	rec := httptest.NewRecorder()
+	c.Set("userID", userID)
+	c.SetPath("/:transaction_id")
+	c.SetParamNames("transaction_id")
+	c.SetParamValues("25")
+	err = UpdateManageUserController(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
