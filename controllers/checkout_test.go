@@ -13,7 +13,8 @@ import (
 )
 
 func TestGetUserCheckoutControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	url := fmt.Sprintf("/users/medicines-payments/checkout?offset=%d&limit=%d", offset, limit)
@@ -32,7 +33,8 @@ func TestGetUserCheckoutControllerValid(t *testing.T) {
 }
 
 func TestGetUserCheckoutControllerInvalidOffset(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	limit := 10
 	url := fmt.Sprintf("/users/medicines-payments/checkout?limit=%d", limit)
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -50,7 +52,8 @@ func TestGetUserCheckoutControllerInvalidOffset(t *testing.T) {
 }
 
 func TestGetUserCheckoutControllerInvalidLimit(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 10
 	url := fmt.Sprintf("/users/medicines-payments/checkout?offset=%d", offset)
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -68,7 +71,8 @@ func TestGetUserCheckoutControllerInvalidLimit(t *testing.T) {
 }
 
 func TestGetUserCheckoutControllerInvalidUserID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	url := fmt.Sprintf("/users/medicines-payments/checkout?offset=%d&limit=%d", offset, limit)
@@ -87,7 +91,8 @@ func TestGetUserCheckoutControllerInvalidUserID(t *testing.T) {
 }
 
 func TestGetUserCheckoutControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	url := fmt.Sprintf("/users/medicines-payments/checkout?offset=%d&limit=%d", offset, limit)
@@ -106,7 +111,8 @@ func TestGetUserCheckoutControllerNotFound(t *testing.T) {
 }
 
 func TestGetUserCheckoutControllerNotFoundStatus(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	payment_status := "test"
@@ -126,7 +132,8 @@ func TestGetUserCheckoutControllerNotFoundStatus(t *testing.T) {
 }
 
 func TestGetUserCheckoutByIDControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/users/medicines-payments/checkout/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	UserToken := os.Getenv("USER_TOKEN")
@@ -144,7 +151,8 @@ func TestGetUserCheckoutByIDControllerValid(t *testing.T) {
 }
 
 func TestGetUserCheckoutByIDControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/users/medicines-payments/checkout/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	UserToken := os.Getenv("USER_TOKEN")
@@ -162,7 +170,8 @@ func TestGetUserCheckoutByIDControllerInvalidID(t *testing.T) {
 }
 
 func TestGetUserCheckoutByIDControllerInvalidUserID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/users/medicines-payments/checkout/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	UserToken := os.Getenv("USER_TOKEN")
@@ -180,7 +189,8 @@ func TestGetUserCheckoutByIDControllerInvalidUserID(t *testing.T) {
 }
 
 func TestGetUserCheckoutByIDControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/users/medicines-payments/checkout/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	UserToken := os.Getenv("USER_TOKEN")
@@ -198,7 +208,8 @@ func TestGetUserCheckoutByIDControllerNotFound(t *testing.T) {
 }
 
 func TestGetAdminCheckoutControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	url := fmt.Sprintf("/admins/medicines-payments/checkout?offset=%d&limit=%d", offset, limit)
@@ -215,7 +226,8 @@ func TestGetAdminCheckoutControllerValid(t *testing.T) {
 }
 
 func TestGetAdminCheckoutControllerInvalidOffset(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	limit := 10
 	url := fmt.Sprintf("/admins/medicines-payments/checkout?limit=%d", limit)
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -231,7 +243,8 @@ func TestGetAdminCheckoutControllerInvalidOffset(t *testing.T) {
 }
 
 func TestGetAdminCheckoutControllerInvalidLimit(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	url := fmt.Sprintf("/admins/medicines-payments/checkout?offset=%d", offset)
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -247,7 +260,8 @@ func TestGetAdminCheckoutControllerInvalidLimit(t *testing.T) {
 }
 
 func TestGetAdminCheckoutControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	payment_status := "test"
@@ -265,7 +279,8 @@ func TestGetAdminCheckoutControllerNotFound(t *testing.T) {
 }
 
 func TestGetAdminCheckoutControllerInvalidUserID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	user_id := "test"
@@ -283,7 +298,8 @@ func TestGetAdminCheckoutControllerInvalidUserID(t *testing.T) {
 }
 
 func TestGetAdminCheckoutControllerNotFoundByUserID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	user_id := 112
@@ -301,7 +317,8 @@ func TestGetAdminCheckoutControllerNotFoundByUserID(t *testing.T) {
 }
 
 func TestGetAdminCheckoutByIDControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/admins/medicines-payments/checkout/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -317,7 +334,8 @@ func TestGetAdminCheckoutByIDControllerValid(t *testing.T) {
 }
 
 func TestGetAdminCheckoutByIDControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/admins/medicines-payments/checkout/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -333,7 +351,8 @@ func TestGetAdminCheckoutByIDControllerInvalidID(t *testing.T) {
 }
 
 func TestGetAdminCheckoutByIDControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/admins/medicines-payments/checkout/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -349,7 +368,8 @@ func TestGetAdminCheckoutByIDControllerNotFound(t *testing.T) {
 }
 
 func TestUpdateCheckoutControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{"payment_status": "success"}`
 	req := httptest.NewRequest(http.MethodPut, "/admins/medicines-payments/checkout/", strings.NewReader(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -366,7 +386,8 @@ func TestUpdateCheckoutControllerValid(t *testing.T) {
 }
 
 func TestUpdateCheckoutControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{"payment_status": "success"}`
 	req := httptest.NewRequest(http.MethodPut, "/admins/medicines-payments/checkout/", strings.NewReader(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -383,7 +404,8 @@ func TestUpdateCheckoutControllerInvalidID(t *testing.T) {
 }
 
 func TestUpdateCheckoutControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{"payment_status": "success"}`
 	req := httptest.NewRequest(http.MethodPut, "/admins/medicines-payments/checkout/", strings.NewReader(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -400,7 +422,8 @@ func TestUpdateCheckoutControllerNotFound(t *testing.T) {
 }
 
 func TestUpdateCheckoutControllerInvalidBody(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{"payment_status": "success",}`
 	req := httptest.NewRequest(http.MethodPut, "/admins/medicines-payments/checkout/", strings.NewReader(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -417,7 +440,8 @@ func TestUpdateCheckoutControllerInvalidBody(t *testing.T) {
 }
 
 func TestUpdateCheckoutControllerInvalidStock(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{"payment_status": "success"}`
 	req := httptest.NewRequest(http.MethodPut, "/admins/medicines-payments/checkout/", strings.NewReader(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -435,7 +459,8 @@ func TestUpdateCheckoutControllerInvalidStock(t *testing.T) {
 
 func TestCreateCheckoutControllerInvalid(t *testing.T) {
 
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	userID := 4
 	medicineTransactionID := 18
 	UserToken := os.Getenv("USER_TOKEN")
@@ -451,7 +476,8 @@ func TestCreateCheckoutControllerInvalid(t *testing.T) {
 
 func TestCreateCheckoutControllerInvalidUserID(t *testing.T) {
 
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	userID := "4"
 	medicineTransactionID := 18
 	UserToken := os.Getenv("USER_TOKEN")
@@ -467,7 +493,8 @@ func TestCreateCheckoutControllerInvalidUserID(t *testing.T) {
 
 func TestCreateCheckoutControllerInvalidBind(t *testing.T) {
 
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	userID := 4
 	medicineTransactionID := 18
 	requestBody := `{"name": "nathan",}]}`
@@ -484,7 +511,8 @@ func TestCreateCheckoutControllerInvalidBind(t *testing.T) {
 
 // func TestCreateCheckoutControllerValid(t *testing.T) {
 
-// 	e := InitTestDB()
+// 	e, db := InitTestDB()
+//    defer CloseDBTest(db)
 // 	userID := 3
 // 	medicineTransactionID := 58
 // 	imagePath := "../image/gambar.jpg"

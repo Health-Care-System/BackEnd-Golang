@@ -14,7 +14,8 @@ import (
 )
 
 func TestGetMedicineTransactionControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	url := fmt.Sprintf("/users/medicines-payments?offset=%d&limit=%d", offset, limit)
@@ -33,7 +34,8 @@ func TestGetMedicineTransactionControllerValid(t *testing.T) {
 }
 
 func TestGetMedicineTransactionControllerInvalidOffset(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	limit := 10
 	url := fmt.Sprintf("/users/medicines-payments?limit=%d", limit)
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -51,7 +53,8 @@ func TestGetMedicineTransactionControllerInvalidOffset(t *testing.T) {
 }
 
 func TestGetMedicineTransactionControllerInvalidLimit(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	url := fmt.Sprintf("/users/medicines-payments?offset=%d", offset)
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -69,7 +72,8 @@ func TestGetMedicineTransactionControllerInvalidLimit(t *testing.T) {
 }
 
 func TestGetMedicineTransactionControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	status_transaction := "belum dibayar"
@@ -91,7 +95,8 @@ func TestGetMedicineTransactionControllerNotFound(t *testing.T) {
 }
 
 func TestGetMedicineTransactionControllerNotFoundOffset(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 999
 	limit := 10
 	url := fmt.Sprintf("/users/medicines-payments?offset=%d&limit=%d", offset, limit)
@@ -111,7 +116,8 @@ func TestGetMedicineTransactionControllerNotFoundOffset(t *testing.T) {
 }
 
 func TestGetMedicineTransactionControllerInvalidUserID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 999
 	limit := 10
 	url := fmt.Sprintf("/users/medicines-payments?offset=%d&limit=%d", offset, limit)
@@ -131,7 +137,8 @@ func TestGetMedicineTransactionControllerInvalidUserID(t *testing.T) {
 }
 
 func TestGetMedicineTransactionByIDControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/users/medicines-payments/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	UserToken := os.Getenv("USER_TOKEN")
@@ -149,7 +156,8 @@ func TestGetMedicineTransactionByIDControllerValid(t *testing.T) {
 }
 
 func TestGetMedicineTransactionByIDControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/users/medicines-payments/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	UserToken := os.Getenv("USER_TOKEN")
@@ -167,7 +175,8 @@ func TestGetMedicineTransactionByIDControllerInvalidID(t *testing.T) {
 }
 
 func TestGetMedicineTransactionByIDControllerInvalidUserID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/users/medicines-payments/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	UserToken := os.Getenv("USER_TOKEN")
@@ -185,7 +194,8 @@ func TestGetMedicineTransactionByIDControllerInvalidUserID(t *testing.T) {
 }
 
 func TestGetMedicineTransactionByIDControllerInvalidNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/users/medicines-payments/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -203,7 +213,8 @@ func TestGetMedicineTransactionByIDControllerInvalidNotFound(t *testing.T) {
 }
 
 func TestDeleteMedicineTransactionControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodDelete, "/users/medicines-payments/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	UserToken := os.Getenv("USER_TOKEN")
@@ -221,7 +232,8 @@ func TestDeleteMedicineTransactionControllerValid(t *testing.T) {
 }
 
 func TestDeleteMedicineTransactionControllerDenied(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodDelete, "/users/medicines-payments/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	UserToken := os.Getenv("USER_TOKEN")
@@ -239,7 +251,8 @@ func TestDeleteMedicineTransactionControllerDenied(t *testing.T) {
 }
 
 func TestDeleteMedicineTransactionControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodDelete, "/users/medicines-payments/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	UserToken := os.Getenv("USER_TOKEN")
@@ -257,7 +270,8 @@ func TestDeleteMedicineTransactionControllerInvalidID(t *testing.T) {
 }
 
 func TestCreateMedicineTransactionControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{
             "name": "Hanisah Fildza Annafisah",
             "address": "cengkareng",
@@ -282,7 +296,8 @@ func TestCreateMedicineTransactionControllerValid(t *testing.T) {
 }
 
 func TestCreateMedicineTransactionControllerRequiredFields(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{
             "name": "Hanisah Fildza Annafisah",
             "address": "cengkareng",
@@ -303,7 +318,8 @@ func TestCreateMedicineTransactionControllerRequiredFields(t *testing.T) {
 }
 
 func TestCreateMedicineTransactionControllerBind(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{
             "name": "Hanisah Fildza Annafisah"
             "address": "cengkareng"}`
@@ -322,7 +338,8 @@ func TestCreateMedicineTransactionControllerBind(t *testing.T) {
 }
 
 func TestCreateMedicineTransactionControllerMedicineIDNil(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{
             "name": "Hanisah Fildza Annafisah",
             "address": "cengkareng",
@@ -347,7 +364,8 @@ func TestCreateMedicineTransactionControllerMedicineIDNil(t *testing.T) {
 }
 
 func TestCreateMedicineTransactionControllerValidQuantityNil(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{
             "name": "Hanisah Fildza Annafisah",
             "address": "cengkareng",
@@ -372,7 +390,8 @@ func TestCreateMedicineTransactionControllerValidQuantityNil(t *testing.T) {
 }
 
 func TestCreateMedicineTransactionControllerMedicineNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{
             "name": "nathan",
             "address": "cengkareng",
@@ -397,7 +416,8 @@ func TestCreateMedicineTransactionControllerMedicineNotFound(t *testing.T) {
 }
 
 func TestCreateMedicineTransactionControllerInvalidUserID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	requestBody := `{
             "name": "Hanisah Fildza Annafisah",
             "address": "cengkareng",

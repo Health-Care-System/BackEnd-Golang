@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"gorm.io/gorm"
 	"healthcare/configs"
 	"healthcare/models/web"
 	"io/ioutil"
@@ -18,15 +19,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func InitTestDB() *echo.Echo {
+func InitTestDB() (*echo.Echo, *gorm.DB) {
 	e := echo.New()
 	godotenv.Load(".env")
-	configs.ConnectDBTest()
-	return e
+	db := configs.ConnectDBTest()
+	return e, db
+}
+
+func CloseDBTest(db *gorm.DB) {
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic("Failed to get underlying DB")
+	}
+	sqlDB.Close()
 }
 
 func TestGetMedicineControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	url := fmt.Sprintf("/users/medicines?offset=%d&limit=%d", offset, limit)
@@ -41,7 +51,8 @@ func TestGetMedicineControllerValid(t *testing.T) {
 }
 
 func TestGetMedicineControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 99
 	limit := 10
 	url := fmt.Sprintf("/users/medicines?offset=%d&limit=%d", offset, limit)
@@ -56,7 +67,8 @@ func TestGetMedicineControllerNotFound(t *testing.T) {
 }
 
 func TestGetMedicineControllerInvalidOffset(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	limit := 10
 	url := fmt.Sprintf("/users/medicines?limit=%d", limit)
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -70,7 +82,8 @@ func TestGetMedicineControllerInvalidOffset(t *testing.T) {
 }
 
 func TestGetMedicineControllerInvalidLimit(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	url := fmt.Sprintf("/users/medicines?offset=%d", offset)
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -84,7 +97,8 @@ func TestGetMedicineControllerInvalidLimit(t *testing.T) {
 }
 
 func TestGetMedicineByIDControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/users/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
@@ -98,7 +112,8 @@ func TestGetMedicineByIDControllerValid(t *testing.T) {
 }
 
 func TestGetMedicineByIDControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/users/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
@@ -112,7 +127,8 @@ func TestGetMedicineByIDControllerInvalidID(t *testing.T) {
 }
 
 func TestGetMedicineByIDControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/users/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
@@ -126,7 +142,8 @@ func TestGetMedicineByIDControllerNotFound(t *testing.T) {
 }
 
 func TestGetMedicineAdminControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	limit := 10
 	url := fmt.Sprintf("/admins/medicines?offset=%d&limit=%d", offset, limit)
@@ -143,7 +160,8 @@ func TestGetMedicineAdminControllerValid(t *testing.T) {
 }
 
 func TestGetMedicineAdminControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 99
 	limit := 10
 	url := fmt.Sprintf("/admins/medicines?offset=%d&limit=%d", offset, limit)
@@ -160,7 +178,8 @@ func TestGetMedicineAdminControllerNotFound(t *testing.T) {
 }
 
 func TestGetMedicineAdminControllerInvalidOffset(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	limit := 10
 	url := fmt.Sprintf("/admins/medicines?limit=%d", limit)
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -176,7 +195,8 @@ func TestGetMedicineAdminControllerInvalidOffset(t *testing.T) {
 }
 
 func TestGetMedicineAdminControllerInvalidLimit(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	offset := 0
 	url := fmt.Sprintf("/admins/medicines?offset=%d", offset)
 	req := httptest.NewRequest(http.MethodGet, url, nil)
@@ -192,7 +212,8 @@ func TestGetMedicineAdminControllerInvalidLimit(t *testing.T) {
 }
 
 func TestGetMedicineAdminByIDControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/admins/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -208,7 +229,8 @@ func TestGetMedicineAdminByIDControllerValid(t *testing.T) {
 }
 
 func TestGetMedicineAdminByIDControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/admins/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -224,7 +246,8 @@ func TestGetMedicineAdminByIDControllerInvalidID(t *testing.T) {
 }
 
 func TestGetMedicineAdminByIDControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/admins/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -240,7 +263,8 @@ func TestGetMedicineAdminByIDControllerNotFound(t *testing.T) {
 }
 
 func TestCreateMedicineControllerBadRequest(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 
 	// Create a sample MedicineRequest
 	medicineRequest := web.MedicineRequest{
@@ -270,7 +294,8 @@ func TestCreateMedicineControllerBadRequest(t *testing.T) {
 }
 
 func TestUpdateMedicineAdminControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	updateData := web.MedicineUpdateRequest{
 		Name: "Updated Name",
 	}
@@ -291,7 +316,8 @@ func TestUpdateMedicineAdminControllerValid(t *testing.T) {
 }
 
 func TestUpdateMedicineAdminControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	updateData := web.MedicineUpdateRequest{
 		Name: "Updated Name",
 	}
@@ -312,7 +338,8 @@ func TestUpdateMedicineAdminControllerInvalidID(t *testing.T) {
 }
 
 func TestUpdateMedicineAdminControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	updateData := web.MedicineUpdateRequest{
 		Name: "Updated Name",
 	}
@@ -333,7 +360,8 @@ func TestUpdateMedicineAdminControllerNotFound(t *testing.T) {
 }
 
 func TestUpdateImageMedicineAdminControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	updateData := web.MedicineUpdateRequest{
 		Name: "Updated Name",
 	}
@@ -354,7 +382,8 @@ func TestUpdateImageMedicineAdminControllerInvalidID(t *testing.T) {
 }
 
 func TestUpdateImageMedicineAdminControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	updateData := web.MedicineUpdateRequest{
 		Name: "Updated Name",
 	}
@@ -375,7 +404,8 @@ func TestUpdateImageMedicineAdminControllerNotFound(t *testing.T) {
 }
 
 func TestDeleteImageMedicineAdminByIDControllerInternalServerError(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodDelete, "/admins/:medicine_id/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -391,7 +421,8 @@ func TestDeleteImageMedicineAdminByIDControllerInternalServerError(t *testing.T)
 }
 
 func TestDeleteMedicineAdminControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodDelete, "/admins/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -410,8 +441,9 @@ func TestDeleteMedicineAdminControllerValid(t *testing.T) {
 }
 
 func TestDeleteMedicineAdminControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
-	req := httptest.NewRequest(http.MethodDelete, "/admins/:medicine_id/medicines/", nil)
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	req := httptest.NewRequest(http.MethodDelete, "/admins/medicines/:medicine_id", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
 	req.Header.Set("Authorization", AdminToken)
@@ -426,7 +458,8 @@ func TestDeleteMedicineAdminControllerInvalidID(t *testing.T) {
 }
 
 func TestDeleteMedicineAdminControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodDelete, "/admins/:medicine_id/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -442,7 +475,8 @@ func TestDeleteMedicineAdminControllerNotFound(t *testing.T) {
 }
 
 func TestDeleteImageMedicineAdminControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodDelete, "/admins/:medicine_id/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -458,7 +492,8 @@ func TestDeleteImageMedicineAdminControllerInvalidID(t *testing.T) {
 }
 
 func TestDeleteImageMedicineAdminControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodDelete, "/admins/:medicine_id/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -474,7 +509,8 @@ func TestDeleteImageMedicineAdminControllerNotFound(t *testing.T) {
 }
 
 func TestGetImageMedicineAdminByIDControllerValid(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/admins/:medicine_id/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -490,7 +526,8 @@ func TestGetImageMedicineAdminByIDControllerValid(t *testing.T) {
 }
 
 func TestGetImageMedicineAdminByIDControllerInvalidID(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/admins/:medicine_id/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
@@ -506,7 +543,8 @@ func TestGetImageMedicineAdminByIDControllerInvalidID(t *testing.T) {
 }
 
 func TestGetImageMedicineAdminByIDControllerNotFound(t *testing.T) {
-	e := InitTestDB()
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 	req := httptest.NewRequest(http.MethodGet, "/admins/:medicine_id/medicines/", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	AdminToken := os.Getenv("ADMIN_TOKEN")
