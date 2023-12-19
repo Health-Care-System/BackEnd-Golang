@@ -9,6 +9,7 @@ import (
 	"healthcare/utils/helper/constanta"
 	"healthcare/utils/request"
 	"healthcare/utils/response"
+	"log"
 	"net/http"
 	"path"
 	"path/filepath"
@@ -24,10 +25,12 @@ func CreateMedicineController(c echo.Context) error {
 	var medicine web.MedicineRequest
 
 	if err := c.Bind(&medicine); err != nil {
+		log.Println(err)
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(constanta.ErrInvalidBody))
 	}
 
 	if err := helper.ValidateStruct(medicine); err != nil {
+		log.Println(err)
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
 	}
 
@@ -203,7 +206,9 @@ func DeleteImageMedicineController(c echo.Context) error {
 
 	if medicine.Image != "" {
 		filename := path.Base(medicine.Image)
+		log.Printf("Deleting file from GCS: %s", filename)
 		if err := helper.DeleteFilesFromGCS(filename); err != nil {
+			log.Printf("Error deleting file from GCS: %v", err)
 			return c.JSON(http.StatusInternalServerError, helper.ErrorResponse(constanta.ErrActionDeleted+"image medicine"))
 		}
 	}
