@@ -1,10 +1,14 @@
 package controllers
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -361,7 +365,7 @@ func TestGetAdminCheckoutByIDControllerNotFound(t *testing.T) {
 	c := e.NewContext(req, rec)
 	c.SetPath("/:checkout_id/")
 	c.SetParamNames("checkout_id")
-	c.SetParamValues("99")
+	c.SetParamValues("999999999")
 	err := GetAdminCheckoutByIDController(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
@@ -415,7 +419,7 @@ func TestUpdateCheckoutControllerNotFound(t *testing.T) {
 	c := e.NewContext(req, rec)
 	c.SetPath("/:checkout_id/")
 	c.SetParamNames("checkout_id")
-	c.SetParamValues("99")
+	c.SetParamValues("9999999999")
 	err := UpdateCheckoutController(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
@@ -509,43 +513,82 @@ func TestCreateCheckoutControllerInvalidBind(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-// func TestCreateCheckoutControllerValid(t *testing.T) {
+func TestCreateCheckoutControllerValid(t *testing.T) {
 
-// 	e, db := InitTestDB()
-//    defer CloseDBTest(db)
-// 	userID := 3
-// 	medicineTransactionID := 58
-// 	imagePath := "../image/gambar.jpg"
-// 	UserToken := os.Getenv("USER_TOKEN")
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	userID := 1
+	medicineTransactionID := 205
+	imagePath := "../image/gambar.jpg"
+	UserToken := os.Getenv("USER_TOKEN")
 
-// 	file, err := os.Open(imagePath)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	defer file.Close()
+	file, err := os.Open(imagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
 
-// 	body := new(bytes.Buffer)
-// 	writer := multipart.NewWriter(body)
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
 
-// 	part, err := writer.CreateFormFile("payment_confirmation", filepath.Base(imagePath))
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	_, err = io.Copy(part, file)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	part, err := writer.CreateFormFile("payment_confirmation", filepath.Base(imagePath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writer.Close()
 
-// 	writer.Close()
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/users/medicines-payments/checkout?medicine_transaction_id=%d", medicineTransactionID), body)
+	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+	req.Header.Set("Authorization", UserToken)
 
-// 	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/users/medicines-payments/checkout?medicine_transaction_id=%d", medicineTransactionID), body)
-// 	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
-// 	req.Header.Set("Authorization", UserToken)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", userID)
+	err = CreateCheckoutController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, rec.Code)
+}
 
-// 	rec := httptest.NewRecorder()
-// 	c := e.NewContext(req, rec)
-// 	c.Set("userID", userID)
-// 	err = CreateCheckoutController(c)
-// 	assert.NoError(t, err)
-// 	assert.Equal(t, http.StatusCreated, rec.Code)
-// }
+func TestCreateCheckoutControllerForbiddenUserID(t *testing.T) {
+
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	userID := 4
+	medicineTransactionID := 203
+	imagePath := "../image/gambar.jpg"
+	UserToken := os.Getenv("USER_TOKEN")
+
+	file, err := os.Open(imagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("payment_confirmation", filepath.Base(imagePath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/users/medicines-payments/checkout?medicine_transaction_id=%d", medicineTransactionID), body)
+	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+	req.Header.Set("Authorization", UserToken)
+
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", userID)
+	err = CreateCheckoutController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+}
