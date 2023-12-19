@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/stretchr/testify/assert"
 	"healthcare/models/web"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +11,9 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestLoginAdminControllerValid(t *testing.T) {
@@ -32,6 +33,20 @@ func TestLoginAdminControllerValid(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
+func TestLoginAdminControllerInvalidBind(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	requestBody := `{"email": "nathan@gmail.com",}]}`
+	req := httptest.NewRequest(http.MethodPost, "/admins/login", strings.NewReader(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	err := LoginAdminController(c)
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+
+}
 func TestLoginAdminControllerInvalidInput(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
@@ -46,6 +61,7 @@ func TestLoginAdminControllerInvalidInput(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
+
 func TestLoginAdminControllerUnregisteredEmail(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
@@ -567,7 +583,47 @@ func TestUpdateAdminControllerValid(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
+func TestUpdateAdminControllerInvalidInput(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
 
+	userID := 1
+	invalidUpdateRequest := web.AdminUpdateRequest{}
+
+	reqBody, err := json.Marshal(invalidUpdateRequest)
+	assert.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPatch, "/admins/update", bytes.NewBuffer(reqBody))
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", userID)
+
+	err = UpdateAdminController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+func TestUpdateAdminControllerUnauthorized(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+
+	validUpdateRequest := web.AdminUpdateRequest{
+		Name:     "Updated Admin",
+		Email:    "updatedadmin@mail.com",
+		Password: "newpassword123",
+	}
+
+	reqBody, err := json.Marshal(validUpdateRequest)
+	assert.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPatch, "/admins/update", bytes.NewBuffer(reqBody))
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", 1)
+
+	err = UpdateAdminController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
 func TestUpdatePaymentStatusByAdminControllerValid(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
@@ -593,3 +649,53 @@ func TestUpdatePaymentStatusByAdminControllerValid(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
+
+func TestUpdatePaymentStatusByAdminController_InvalidPaymentStatus(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+
+	userID := 1
+	invalidUpdateRequest := web.UpdatePaymentRequest{}
+	
+	reqBody, err := json.Marshal(invalidUpdateRequest)
+	assert.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPatch, "/admins/doctor-payments", bytes.NewBuffer(reqBody))
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", userID)
+	c.SetPath("/:transaction_id")
+	c.SetParamNames("transaction_id")
+	c.SetParamValues("17")
+	err = UpdatePaymentStatusByAdminController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestUpdatePaymentStatusByAdminController_TransactionNotFound(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+
+	userID := 1
+	UpdateRequest := web.UpdatePaymentRequest{
+		PaymentStatus: "pending",
+	}
+	
+	reqBody, err := json.Marshal(UpdateRequest)
+	assert.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPatch, "/admins/doctor-payments", bytes.NewBuffer(reqBody))
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", userID)
+	c.SetPath("/:transaction_id")
+	c.SetParamNames("transaction_id")
+	c.SetParamValues("1777")
+	err = UpdatePaymentStatusByAdminController(c)
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+
+
