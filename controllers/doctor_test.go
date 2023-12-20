@@ -5,16 +5,66 @@ import (
 	"encoding/json"
 	"fmt"
 	"healthcare/models/web"
-	"io/ioutil"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestRegisterDoctorControllerValidWithImage(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+
+	imagePath := "../image/gambar.jpg"
+
+	file, err := os.Open(imagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	// Add image file to the form data
+	part, err := writer.CreateFormFile("profile_picture", filepath.Base(imagePath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = writer.WriteField("fullname", "Hanisah Fildza Annafisah")
+	_ = writer.WriteField("email", "asal3@gmail.com")
+	_ = writer.WriteField("password", "asalasalan")
+	_ = writer.WriteField("price", "70000")
+	_ = writer.WriteField("no_str", "12345678910")
+	_ = writer.WriteField("specialist", "dokter hewan")
+	_ = writer.WriteField("gender", "female")
+	_ = writer.WriteField("experience", "5 tahun")
+	_ = writer.WriteField("alumnus", "UI")
+
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/admins/doctors/register", body)
+	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+	AdminToken := os.Getenv("ADMIN_TOKEN")
+	req.Header.Set("Authorization", AdminToken)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	err = RegisterDoctorByAdminController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, rec.Code)
+}
 
 func TestRegisterDoctorControllerInvalidBody(t *testing.T) {
 	e, db := InitTestDB()
@@ -42,13 +92,13 @@ func TestRegisterDoctorControllerInvalidBody(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestRegisterDoctorControllerValid(t *testing.T) {
+func TestRegisterDoctorControllerRequiredFields(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
 	requestBody := `{
-            "fullname": "Hanisah Fildza Annafisah",
-            "email": "asal@gmail.com",
-            "password": "asalasalan"
+           "fullname": "Hanisah Fildza Annafisah",
+           "email": "asal2@gmail.com",
+           "password": "asalasalan"
 	}`
 	req := httptest.NewRequest(http.MethodPost, "/admins/doctors/register", strings.NewReader(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -62,12 +112,106 @@ func TestRegisterDoctorControllerValid(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
+func TestUpdateDoctorControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	imagePath := "../image/gambar.jpg"
+	doctorID := 9
+
+	file, err := os.Open(imagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("profile_picture", filepath.Base(imagePath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = writer.WriteField("email", "asalasalid9@gmail.com")
+	_ = writer.WriteField("password", "asalasalan")
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPut, "/doctors/profile/", body)
+	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", doctorID)
+	err = UpdateDoctorController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestUpdateDoctorByAdminControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	imagePath := "../image/gambar.jpg"
+
+	file, err := os.Open(imagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("profile_picture", filepath.Base(imagePath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = writer.WriteField("email", "asalasalid10@gmail.com")
+	_ = writer.WriteField("password", "asalasalan")
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPut, "/admins/doctor/:doctor_id/", body)
+	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:doctor_id/")
+	c.SetParamNames("doctor_id")
+	c.SetParamValues("10")
+	err = UpdateDoctorByAdminController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestUpdateManageUserControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	doctorID := 1
+	requestBody := `{"health_details": "demam",
+					 "patient_status": "recovered"}`
+	req := httptest.NewRequest(http.MethodPut, "/doctors/manage-user/:transaction_id/", strings.NewReader(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", doctorID)
+	c.SetPath("/:transaction_id")
+	c.SetParamNames("transaction_id")
+	c.SetParamValues("1")
+	err := UpdateManageUserController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
 func TestLoginDoctorControllerValid(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
 	requestBody := `{
 		"email":    "mutiakhoirunniza@gmail.com",
-		"password": "cokayaa123"
+		"password": "asalasalan"
 	}`
 	req := httptest.NewRequest(http.MethodPost, "/doctors/login", strings.NewReader(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -155,13 +299,122 @@ func TestGetAvailableDoctorControllervalid(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-
-	// Memanggil controller
 	err := GetAvailableDoctor(c)
-
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
+
+func TestGetAllDoctorConsultationControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	doctorID := 4
+	offset := 0
+	limit := 12
+	url := fmt.Sprintf("/doctors/doctor-consultation?offset=%d&limit=%d", offset, limit)
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", doctorID)
+	err := GetAllDoctorConsultationController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestGetAllDoctorConsultationControllerInvalidDoctorID(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	doctorID := "4"
+	offset := 0
+	limit := 12
+	url := fmt.Sprintf("/doctors/doctor-consultation?offset=%d&limit=%d", offset, limit)
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", doctorID)
+	err := GetAllDoctorConsultationController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+}
+
+func TestGetAllDoctorConsultationControllerInvalidOffset(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	doctorID := 4
+	limit := 12
+	url := fmt.Sprintf("/doctors/doctor-consultation?&limit=%d", limit)
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", doctorID)
+	err := GetAllDoctorConsultationController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestGetAllDoctorConsultationControllerInvalidLimit(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	doctorID := 4
+	offset := 0
+	url := fmt.Sprintf("/doctors/doctor-consultation?offset=%d", offset)
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", doctorID)
+	err := GetAllDoctorConsultationController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestGetDoctorStatusControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	doctorID := 4
+	url := fmt.Sprintf("/doctors/status")
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", doctorID)
+	err := GetDoctorStatusController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestGetDoctorStatusControllerNotFound(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	doctorID := 99999
+	url := fmt.Sprintf("/doctors/status")
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", doctorID)
+	err := GetDoctorStatusController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+func TestGetDoctorStatusControllerInternalServerError(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	doctorID := 99999
+	url := fmt.Sprintf("/doctors/status")
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", doctorID)
+	err := GetDoctorStatusController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
 func TestGetAvailableDoctorControllerInvalidOffset(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
@@ -315,6 +568,24 @@ func TestGetAllDoctorByAdminControllerValid(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
+
+func TestGetAllDoctorByAdminControllerNotFound(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	validOffset := 999999
+	validLimit := 12
+	url := fmt.Sprintf("/admins/doctors?offset=%d&limit=%d", validOffset, validLimit)
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	AdminToken := os.Getenv("ADMIN_TOKEN")
+	req.Header.Set("Authorization", AdminToken)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	err := GetAllDoctorByAdminController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
 func TestGetAllDoctorByAdminControllerInvalidOffset(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
@@ -1133,29 +1404,40 @@ func TestChangeDoctorStatusControllerValid(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
-func TestUpdateManageUserControllerValid(t *testing.T) {
+func TestChangeDoctorStatusControllerInvalidDoctorID(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
-
-	updatedData := web.UpdateManageUserRequest{
-		HealthDetails: "Demam",
-		PatientStatus: "success",
-	}
-	req := httptest.NewRequest(http.MethodPut, "/doctors/manage-user", nil)
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	c := e.NewContext(req, echo.NewResponse(httptest.NewRecorder(), e))
 	doctorToken := os.Getenv("DOCTOR_TOKEN")
+
+	requestBody := `{"status": true}`
+	req := httptest.NewRequest(http.MethodPut, "/doctors/status", strings.NewReader(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set("Authorization", doctorToken)
-	userID := 4
-	body, err := json.Marshal(updatedData)
-	req.Body = ioutil.NopCloser(bytes.NewReader(body))
+	doctorID := "4"
 	rec := httptest.NewRecorder()
-	c.Set("userID", userID)
-	c.SetPath("/:transaction_id")
-	c.SetParamNames("transaction_id")
-	c.SetParamValues("25")
-	err = UpdateManageUserController(c)
+	c := e.NewContext(req, rec)
+	c.Set("userID", doctorID)
+
+	err := ChangeDoctorStatusController(c)
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
 
+func TestChangeDoctorStatusControllerInvalidBody(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	doctorToken := os.Getenv("DOCTOR_TOKEN")
+
+	requestBody := `{"status": true,}`
+	req := httptest.NewRequest(http.MethodPut, "/doctors/status", strings.NewReader(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", doctorToken)
+	doctorID := 4
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", doctorID)
+
+	err := ChangeDoctorStatusController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}

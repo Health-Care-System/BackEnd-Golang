@@ -7,11 +7,14 @@ import (
 	"gorm.io/gorm"
 	"healthcare/configs"
 	"healthcare/models/web"
+	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/joho/godotenv"
@@ -262,21 +265,67 @@ func TestGetMedicineAdminByIDControllerNotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
+func TestCreateMedicineControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+
+	imagePath := "../image/gambar.jpg"
+
+	file, err := os.Open(imagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	// Add image file to the form data
+	part, err := writer.CreateFormFile("image", filepath.Base(imagePath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = writer.WriteField("code", "test")
+	_ = writer.WriteField("name", "test")
+	_ = writer.WriteField("merk", "test")
+	_ = writer.WriteField("category", "test")
+	_ = writer.WriteField("type", "test")
+	_ = writer.WriteField("price", "1")
+	_ = writer.WriteField("stock", "1")
+	_ = writer.WriteField("details", "test")
+
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/admins/medicines", body)
+	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+	AdminToken := os.Getenv("ADMIN_TOKEN")
+	req.Header.Set("Authorization", AdminToken)
+
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	err = CreateMedicineController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, rec.Code)
+}
+
 func TestCreateMedicineControllerBadRequest(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
 
-	// Create a sample MedicineRequest
 	medicineRequest := web.MedicineRequest{
 		Code: "ABC123",
 	}
-
 	_, err := json.Marshal(medicineRequest)
 	assert.NoError(t, err)
 
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-
 	url := "/admins/medicines"
 
 	req := httptest.NewRequest(http.MethodPost, url, body)
@@ -289,6 +338,22 @@ func TestCreateMedicineControllerBadRequest(t *testing.T) {
 
 	err = CreateMedicineController(c)
 
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestCreateMedicineControllerInvalidBody(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	requestBody := `{"code": "123",}`
+	req := httptest.NewRequest(http.MethodPost, "/admins/medicines", strings.NewReader(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	AdminToken := os.Getenv("ADMIN_TOKEN")
+	req.Header.Set("Authorization", AdminToken)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	fmt.Println(rec.Code)
+	err := CreateMedicineController(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
@@ -359,6 +424,84 @@ func TestUpdateMedicineAdminControllerNotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
+func TestUpdateImageMedicineAdminControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	imagePath := "../image/gambar.jpg"
+	AdminToken := os.Getenv("ADMIN_TOKEN")
+
+	file, err := os.Open(imagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("image", filepath.Base(imagePath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPut, "/admins/:medicine_id/medicines/", body)
+	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+	req.Header.Set("Authorization", AdminToken)
+
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:medicine_id/")
+	c.SetParamNames("medicine_id")
+	c.SetParamValues("1")
+	err = UpdateImageMedicineController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestUpdateImageMedicineAdminControllerInternalServerError(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	imagePath := "../image/gambar.jpg"
+	AdminToken := os.Getenv("ADMIN_TOKEN")
+
+	file, err := os.Open(imagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("image", filepath.Base(imagePath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPut, "/admins/:medicine_id/medicines/", body)
+	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+	req.Header.Set("Authorization", AdminToken)
+
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:medicine_id/")
+	c.SetParamNames("medicine_id")
+	c.SetParamValues("2")
+	err = UpdateImageMedicineController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+}
+
 func TestUpdateImageMedicineAdminControllerInvalidID(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
@@ -403,6 +546,23 @@ func TestUpdateImageMedicineAdminControllerNotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, rec.Code)
 }
 
+func TestDeleteImageMedicineAdminControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	req := httptest.NewRequest(http.MethodDelete, "/admins/medicines/:medicine_id/image", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	AdminToken := os.Getenv("ADMIN_TOKEN")
+	req.Header.Set("Authorization", AdminToken)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:medicine_id/")
+	c.SetParamNames("medicine_id")
+	c.SetParamValues("1")
+	err := DeleteImageMedicineController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
 func TestDeleteImageMedicineAdminByIDControllerInternalServerError(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
@@ -433,9 +593,6 @@ func TestDeleteMedicineAdminControllerValid(t *testing.T) {
 	c.SetParamNames("medicine_id")
 	c.SetParamValues("8")
 	err := DeleteMedicineController(c)
-	if err != nil {
-		t.Logf("Error in DeleteMedicineController: %v", err)
-	}
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }
