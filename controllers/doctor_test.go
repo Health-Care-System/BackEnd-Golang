@@ -211,7 +211,7 @@ func TestLoginDoctorControllerValid(t *testing.T) {
 	defer CloseDBTest(db)
 	requestBody := `{
 		"email":    "mutiakhoirunniza@gmail.com",
-		"password": "cokayaa123"
+		"password": "asalasalan"
 	}`
 	req := httptest.NewRequest(http.MethodPost, "/doctors/login", strings.NewReader(requestBody))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
