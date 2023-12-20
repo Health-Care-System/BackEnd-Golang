@@ -365,7 +365,7 @@ func TestCreateRoomchatControllerValid(t *testing.T) {
 	c := e.NewContext(req, rec)
 	c.SetPath("/:transaction_id")
 	c.SetParamNames("transaction_id")
-	c.SetParamValues("151")
+	c.SetParamValues("153")
 	c.Set("userID", userID)
 
 	err := CreateRoomchatController(c)

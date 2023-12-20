@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -720,7 +721,7 @@ func TestRegisterUserValid(t *testing.T) {
 	defer CloseDBTest(db)
 	requestBody := `{
 		"fullname": "test",
-		"email": "test1112441@gmail.com",
+		"email": "test14441@gmail.com",
 		"password": "testing12345"
 	}`
 	req := httptest.NewRequest(http.MethodPost, "/users/register", bytes.NewBufferString(requestBody))
@@ -756,7 +757,7 @@ func TestUpdateUserControllerValid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = writer.WriteField("email", "test124235131@gmail.com")
+	_ = writer.WriteField("email", "test1235131@gmail.com")
 	writer.Close()
 
 	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/users/profile"), body)
@@ -765,6 +766,23 @@ func TestUpdateUserControllerValid(t *testing.T) {
 	c := e.NewContext(req, rec)
 	c.Set("userID", userID)
 	err = UpdateUserController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestGetUserPaymentsByAdminsControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	userID := 1
+	url := fmt.Sprintf("/admins/doctor-payment/%d?limit=10&offset=0", userID)
+	req := httptest.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.SetPath("/:user_id")
+	c.SetParamNames("user_id")
+	c.SetParamValues(strconv.Itoa(userID))
+	err := GetUserPaymentsByAdminsController(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
 }

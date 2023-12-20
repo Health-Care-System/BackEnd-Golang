@@ -222,7 +222,7 @@ func TestDoctorGetArticleByIdInvalid(t *testing.T) {
 func TestDeleteArticleByIdValid(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
-	articleID := 43
+	articleID := 39
 	req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/path/to/delete/article/%d", articleID), nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
@@ -260,8 +260,8 @@ func TestCreateArticlesControllerValid(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_ = writer.WriteField("title", "test5")
-	_ = writer.WriteField("content", "test5")
+	_ = writer.WriteField("title", "test415")
+	_ = writer.WriteField("content", "test415")
 
 	writer.Close()
 
@@ -299,8 +299,8 @@ func TestUpdateArticlesControllerValid(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_ = writer.WriteField("title", "test2")
-	_ = writer.WriteField("content", "test2")
+	_ = writer.WriteField("title", "test223")
+	_ = writer.WriteField("content", "test112")
 
 	writer.Close()
 

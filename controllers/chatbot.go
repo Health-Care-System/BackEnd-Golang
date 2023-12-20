@@ -27,7 +27,7 @@ func Chatbot(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
 	}
 
-	client := openai.NewClient("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")
+	client := openai.NewClient("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")
 
 	response, err := client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
 		Model: openai.GPT3Dot5Turbo,
