@@ -1,15 +1,32 @@
 package controllers
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
+	"strconv"
 	"testing"
 
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestGetAllArticlesByTitleValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	req := httptest.NewRequest(http.MethodGet, "/users/article?title=coba&limit=10&offset=0", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	err := GetAllArticlesByTitle(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
 
 func TestUserGetAllArticleValid(t *testing.T) {
 	e, db := InitTestDB()
@@ -66,7 +83,7 @@ func TestUserGetArticleByIdValid(t *testing.T) {
 	c := e.NewContext(req, rec)
 	c.SetPath("/:article_id/")
 	c.SetParamNames("article_id")
-	c.SetParamValues("1")
+	c.SetParamValues("2")
 	err := GetArticleByID(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
@@ -177,7 +194,7 @@ func TestDoctorGetArticleByIdValid(t *testing.T) {
 	c.Set("userID", userID)
 	c.SetPath("/:article_id/")
 	c.SetParamNames("article_id")
-	c.SetParamValues("1")
+	c.SetParamValues("2")
 	err := DoctorGetArticleByID(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, rec.Code)
@@ -200,4 +217,102 @@ func TestDoctorGetArticleByIdInvalid(t *testing.T) {
 	err := DoctorGetArticleByID(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNotFound, rec.Code)
+}
+
+func TestDeleteArticleByIdValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	articleID := 43
+	req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/path/to/delete/article/%d", articleID), nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", 15)
+	c.SetPath("/:article_id")
+	c.SetParamNames("article_id")
+	c.SetParamValues(strconv.Itoa(articleID))
+	err := DeleteArticleById(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestCreateArticlesControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+
+	imagePath := "../image/gambar.jpg"
+
+	file, err := os.Open(imagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("image", filepath.Base(imagePath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = writer.WriteField("title", "test5")
+	_ = writer.WriteField("content", "test5")
+
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/doctors/articles", body)
+	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", 15)
+	err = CreateArticle(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, rec.Code)
+}
+
+func TestUpdateArticlesControllerValid(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	articleID := 18
+	imagePath := "../image/gambar.jpg"
+
+	file, err := os.Open(imagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("image", filepath.Base(imagePath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_ = writer.WriteField("title", "test2")
+	_ = writer.WriteField("content", "test2")
+
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/doctors/articles/%d", articleID), body)
+	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", 15)
+	c.SetPath("/:article_id")
+	c.SetParamNames("article_id")
+	c.SetParamValues(strconv.Itoa(articleID))
+	err = UpdateArticleById(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
 }

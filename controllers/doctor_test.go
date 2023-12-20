@@ -44,7 +44,7 @@ func TestRegisterDoctorControllerValidWithImage(t *testing.T) {
 	}
 
 	_ = writer.WriteField("fullname", "Hanisah Fildza Annafisah")
-	_ = writer.WriteField("email", "asal4122@gmail.com")
+	_ = writer.WriteField("email", "asal4114522@gmail.com")
 	_ = writer.WriteField("password", "asalasalan")
 	_ = writer.WriteField("price", "70000")
 	_ = writer.WriteField("no_str", "12345678910")
@@ -135,7 +135,7 @@ func TestUpdateDoctorControllerValid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = writer.WriteField("email", "asalasalid521@gmail.com")
+	_ = writer.WriteField("email", "asalasalid24521@gmail.com")
 	_ = writer.WriteField("password", "asalasalan")
 	writer.Close()
 
@@ -171,7 +171,7 @@ func TestUpdateDoctorByAdminControllerValid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = writer.WriteField("email", "asalasalid2051@gmail.com")
+	_ = writer.WriteField("email", "asalasalid2234051@gmail.com")
 	_ = writer.WriteField("password", "asalasalan")
 	writer.Close()
 

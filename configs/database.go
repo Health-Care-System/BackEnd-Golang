@@ -2,13 +2,11 @@ package configs
 
 import (
 	"fmt"
-	"healthcare/models/schema"
-	"log"
-	"os"
-
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"healthcare/models/schema"
+	"log"
 )
 
 var DB *gorm.DB
@@ -56,23 +54,21 @@ func InitialMigration() {
 
 func ConnectDBTest() *gorm.DB {
 
-	TDB_Username := os.Getenv("DB_USERNAME")
-	TDB_Password := os.Getenv("DB_PASSWORD")
-	TDB_Host := os.Getenv("DB_HOST")
-	TDB_Port := os.Getenv("DB_PORT")
-	TDB_Name := os.Getenv("DB_NAME")
+	TDB_Username := "root"
+	TDB_Password := ""
+	TDB_Port := "3306"
+	TDB_Host := "localhost"
+	TDB_Name := "finaldb"
 
-	if TDB_Username == "" || TDB_Password == "" || TDB_Host == "" || TDB_Port == "" || TDB_Name == "" {
-		fmt.Println("one or more database environment variables are not set")
-	}
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		TDB_Username, TDB_Password, TDB_Host, TDB_Port, TDB_Name)
 
+	log.Printf("Connection String: %s\n", dsn)
+
 	var errDB error
-	DB, errDB = gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
+	DB, errDB = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if errDB != nil {
-		log.Fatalf("errornya adalah: %v", errDB)
+		panic("Failed to Connect Database")
 	}
 	return DB
 }

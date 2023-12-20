@@ -338,7 +338,7 @@ func TestCreateDoctorTransactionControllerInvalidInputData(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
 func TestCreateDoctorTransactionControllerValid(t *testing.T) {
-	
+
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
 
@@ -364,14 +364,12 @@ func TestCreateDoctorTransactionControllerValid(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	
 	writer.WriteField("payment_method", "manual transfer bca")
 	writer.Close()
 
 	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/users/doctor-payments/:doctor_id/4"), body)
 	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
 	req.Header.Set("Authorization", UserToken)
-
 
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
@@ -380,9 +378,7 @@ func TestCreateDoctorTransactionControllerValid(t *testing.T) {
 	c.SetParamNames("doctor_id")
 	c.SetParamValues("4")
 
-
 	err = CreateDoctorTransactionController(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
 }
-

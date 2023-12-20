@@ -9,6 +9,7 @@ import (
 	"healthcare/utils/helper/constanta"
 	"healthcare/utils/request"
 	"healthcare/utils/response"
+	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -38,7 +39,7 @@ func GetAllDoctorTransactionPagination(userID int, offset int, limit int, paymen
 	result := query.Find(&queryAll)
 
 	if result.Error != nil {
-		return nil, 0, result.Error 
+		return nil, 0, result.Error
 	}
 
 	if offset >= int(total) {
@@ -97,6 +98,7 @@ func CreateDoctorTransactionController(c echo.Context) error {
 
 	paymentConfirmations, err := helper.UploadFilesToGCS(c, fileHeader)
 	if err != nil {
+		log.Println(err)
 		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("error upload image to cloud storage"))
 	}
 
@@ -134,6 +136,7 @@ func GetDoctorTransactionController(c echo.Context) error {
 
 	userID, ok := c.Get("userID").(int)
 	if !ok {
+		log.Println(ok)
 		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("invalid user id"))
 	}
 
@@ -156,7 +159,6 @@ func GetDoctorTransactionController(c echo.Context) error {
 	response := response.ConvertToGetDoctorTransactionResponse(doctorTransaction, doctor)
 
 	return c.JSON(http.StatusOK, helper.SuccessResponse("doctor transaction data successfully retrieved", response))
-
 }
 
 // Get All Doctor Transactions or Get Doctor Transaction by Status

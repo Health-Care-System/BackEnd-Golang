@@ -7,8 +7,8 @@ import (
 	"healthcare/utils/helper"
 	"healthcare/utils/helper/constanta"
 	"healthcare/utils/helper/prompt"
+	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -27,7 +27,7 @@ func Chatbot(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
 	}
 
-	client := openai.NewClient(os.Getenv("OPENAI_API_KEY"))
+	client := openai.NewClient("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")
 
 	response, err := client.CreateChatCompletion(context.Background(), openai.ChatCompletionRequest{
 		Model: openai.GPT3Dot5Turbo,
@@ -42,6 +42,7 @@ func Chatbot(c echo.Context) error {
 	// fmt.Println(string(promptContent), request.Request) // for debugging
 
 	if err != nil {
+		log.Println(err)
 		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse(constanta.ErrActionGet+"recommendation"))
 	}
 

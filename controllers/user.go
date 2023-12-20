@@ -10,6 +10,7 @@ import (
 	"healthcare/utils/helper/constanta"
 	"healthcare/utils/request"
 	"healthcare/utils/response"
+	"log"
 	"net/http"
 	"path/filepath"
 	"sort"
@@ -45,7 +46,7 @@ func RegisterUserController(c echo.Context) error {
 	}
 
 	// Send OTP via email
-	err := helper.SendOTPViaEmail(userRequest.Email, "user","register")
+	err := helper.SendOTPViaEmail(userRequest.Email, "user", "register")
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse(constanta.ErrActionGet+"OTP via email"))
 	}
@@ -253,6 +254,7 @@ func UpdateUserController(c echo.Context) error {
 
 	userID, ok := c.Get("userID").(int)
 	if !ok {
+		log.Println(ok)
 		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("invalid user id"))
 	}
 
@@ -260,6 +262,7 @@ func UpdateUserController(c echo.Context) error {
 
 	result := configs.DB.Where("id = ?", userID).First(&existingUser)
 	if result.Error != nil {
+		log.Println(result)
 		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse("failed to retrieve user"))
 	}
 
@@ -455,7 +458,7 @@ func GetOTPForPasswordUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
 	}
 
-	if err := helper.SendOTPViaEmail(OTPRequest.Email, "user","reset"); err != nil {
+	if err := helper.SendOTPViaEmail(OTPRequest.Email, "user", "reset"); err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse(constanta.ErrActionGet+"send OTP"))
 	}
 

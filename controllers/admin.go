@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"healthcare/configs"
 	"healthcare/middlewares"
 	"healthcare/models/schema"
@@ -15,34 +14,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 )
-
-func GetAllAdminsPagination(offset int, limit int, queryInput []schema.Admin) ([]schema.Admin, int64, error) {
-
-	if offset < 0 || limit < 0 {
-		return nil, 0, nil
-	}
-
-	queryAll := queryInput
-	var total int64
-
-	query := configs.DB.Model(&queryAll)
-
-	query.Find(&queryAll).Count(&total)
-
-	query = query.Limit(limit).Offset(offset)
-
-	result := query.Find(&queryAll)
-
-	if result.Error != nil {
-		return nil, 0, result.Error
-	}
-
-	if offset >= int(total) {
-		return nil, 0, fmt.Errorf("not found")
-	}
-
-	return queryAll, total, nil
-}
 
 // Admin Login
 func LoginAdminController(c echo.Context) error {
@@ -98,7 +69,7 @@ func UpdateAdminController(c echo.Context) error {
 	return c.JSON(http.StatusOK, helper.SuccessResponse("admin updated data successful", response))
 }
 
-// Admin Update Payment Status 
+// Admin Update Payment Status
 func UpdatePaymentStatusByAdminController(c echo.Context) error {
 	// Parse transaction ID from the request parameters
 	transaction_id, err := strconv.Atoi(c.Param("transaction_id"))
@@ -233,33 +204,32 @@ func GetDoctorTransactionByIDController(c echo.Context) error {
 }
 
 func ResetPasswordAdmin(c echo.Context) error {
-    var resetRequest web.ResetRequest
-    if err := c.Bind(&resetRequest); err != nil {
-        return c.JSON(http.StatusBadRequest, helper.ErrorResponse("Invalid request"))
-    }
+	var resetRequest web.ResetRequest
+	if err := c.Bind(&resetRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.ErrorResponse("Invalid request"))
+	}
 
-    if err := helper.ValidateStruct(resetRequest); err != nil {
-        return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
-    }
+	if err := helper.ValidateStruct(resetRequest); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
+	}
 
-    // Verify OTP
-    if err := helper.VerifyOTPByEmail(resetRequest.Email, resetRequest.OTP, "admin"); err != nil {
-        return c.JSON(http.StatusBadRequest, helper.ErrorResponse(constanta.ErrActionGet+"OTP verification failed"))
-    }
+	// Verify OTP
+	if err := helper.VerifyOTPByEmail(resetRequest.Email, resetRequest.OTP, "admin"); err != nil {
+		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(constanta.ErrActionGet+"OTP verification failed"))
+	}
 
-    // Update password without hashing
-    if err := helper.UpdatePasswordInDatabase(configs.DB, "admins", resetRequest.Email, resetRequest.Password, resetRequest.OTP); err != nil {
-        return c.JSON(http.StatusInternalServerError, helper.ErrorResponse(constanta.ErrActionGet+"update password"))
-    }
+	// Update password without hashing
+	if err := helper.UpdatePasswordInDatabase(configs.DB, "admins", resetRequest.Email, resetRequest.Password, resetRequest.OTP); err != nil {
+		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse(constanta.ErrActionGet+"update password"))
+	}
 
-    // Delete OTP from the database
-    if err := helper.DeleteOTPFromDatabase(configs.DB, "admins", resetRequest.Email); err != nil {
-        return c.JSON(http.StatusInternalServerError, helper.ErrorResponse(constanta.ErrActionGet+"delete OTP"))
-    }
+	// Delete OTP from the database
+	if err := helper.DeleteOTPFromDatabase(configs.DB, "admins", resetRequest.Email); err != nil {
+		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse(constanta.ErrActionGet+"delete OTP"))
+	}
 
-    return c.JSON(http.StatusOK, helper.SuccessResponse(constanta.SuccessActionUpdated+"admin's password", nil))
+	return c.JSON(http.StatusOK, helper.SuccessResponse(constanta.SuccessActionUpdated+"admin's password", nil))
 }
-
 
 func GetOTPForPasswordAdmin(c echo.Context) error {
 	var OTPRequest web.PasswordResetRequest
@@ -271,7 +241,7 @@ func GetOTPForPasswordAdmin(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(err.Error()))
 	}
 
-	if err := helper.SendOTPViaEmail(OTPRequest.Email,"admin","reset"); err != nil {
+	if err := helper.SendOTPViaEmail(OTPRequest.Email, "admin", "reset"); err != nil {
 		return c.JSON(http.StatusInternalServerError, helper.ErrorResponse(constanta.ErrActionGet+"send OTP"))
 	}
 
@@ -289,7 +259,7 @@ func VerifyOTPAdmin(c echo.Context) error {
 	}
 
 	// Verify OTP and handle errors
-	if err := helper.VerifyOTPByEmail(verificationRequest.Email, verificationRequest.OTP,"admin"); err != nil {
+	if err := helper.VerifyOTPByEmail(verificationRequest.Email, verificationRequest.OTP, "admin"); err != nil {
 		return c.JSON(http.StatusBadRequest, helper.ErrorResponse(constanta.ErrActionGet+"OTP not found"))
 	}
 
