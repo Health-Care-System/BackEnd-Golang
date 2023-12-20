@@ -518,7 +518,7 @@ func TestCreateCheckoutControllerValid(t *testing.T) {
 	e, db := InitTestDB()
 	defer CloseDBTest(db)
 	userID := 1
-	medicineTransactionID := 205
+	medicineTransactionID := 203
 	imagePath := "../image/gambar.jpg"
 	UserToken := os.Getenv("USER_TOKEN")
 

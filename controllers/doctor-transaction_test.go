@@ -1,9 +1,15 @@
 package controllers
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v4"
@@ -81,6 +87,22 @@ func TestGetDoctorTransactionInternalError(t *testing.T) {
 	err := GetDoctorTransactionController(c)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+}
+
+func TestGetDoctorTransactionControllerInvalidInvalidUserID(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+	userID := "3"
+	UserToken := os.Getenv("USER_TOKEN")
+	req := httptest.NewRequest(http.MethodGet, "/users/doctor-payments/", nil)
+	req.Header.Set("Authorization", UserToken)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", userID)
+	err := GetDoctorTransactionController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+
 }
 func TestGetAllDoctorTransactionsControllerValid(t *testing.T) {
 	e, db := InitTestDB()
@@ -265,3 +287,102 @@ func TestGetAllDoctorTransactionsControllerInvalid(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
+
+func TestCreateDoctorTransactionControllerInvalidUserID(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+
+	userID := "invalid_user_id"
+	doctorID := 1
+
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/users/doctor-payments/%d", doctorID), nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", userID)
+
+	err := CreateDoctorTransactionController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+}
+func TestCreateDoctorTransactionControllerInvalidDoctorID(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+
+	userID := 1
+	doctorID := "10"
+
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/users/doctor-payments/%s", doctorID), nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", userID)
+
+	err := CreateDoctorTransactionController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+func TestCreateDoctorTransactionControllerInvalidInputData(t *testing.T) {
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+
+	userID := 1
+	doctorID := 1
+	requestBody := `{"payment_method": "invalid_method", "payment_confirmation": ""}`
+
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/users/doctor-payments/%d", doctorID), strings.NewReader(requestBody))
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", userID)
+
+	err := CreateDoctorTransactionController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+func TestCreateDoctorTransactionControllerValid(t *testing.T) {
+	
+	e, db := InitTestDB()
+	defer CloseDBTest(db)
+
+	userID := 3
+	imagePath := "../image/gambar.jpg"
+	UserToken := os.Getenv("USER_TOKEN")
+
+	file, err := os.Open(imagePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	part, err := writer.CreateFormFile("payment_confirmation", filepath.Base(imagePath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	
+	writer.WriteField("payment_method", "manual transfer bca")
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/users/doctor-payments/:doctor_id/4"), body)
+	req.Header.Set(echo.HeaderContentType, writer.FormDataContentType())
+	req.Header.Set("Authorization", UserToken)
+
+
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("userID", userID)
+	c.SetPath("/:doctor_id/")
+	c.SetParamNames("doctor_id")
+	c.SetParamValues("4")
+
+
+	err = CreateDoctorTransactionController(c)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
+}
+
